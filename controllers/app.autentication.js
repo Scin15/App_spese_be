@@ -8,7 +8,8 @@ import {
     sendRefreshToken
 } from './token.js'
 import { isAuth } from './isAuth.js'
-
+import * as jwt from 'jsonwebtoken'
+const {verify} = jwt.default
 const prisma = new PrismaClient() 
 
 const registerUser = async (req, res) => {
@@ -78,7 +79,7 @@ const loginUser = async (req, res) => {
     const accessToken = generateAccessToken( user.id )
     const refreshToken = generateRefreshToken( user.id )
     // inserimento refresh_token nel DB
-    const addRefreshToken = await prisma.app_users.update( {
+    await prisma.app_users.update( {
         where : {
             id : user.id
         },
@@ -88,10 +89,8 @@ const loginUser = async (req, res) => {
     } )
 
     // invio del token di autenticazione e di refresh
-    sendAccessToken( req, res, accessToken )
     sendRefreshToken( req, res, refreshToken)
-
-    //res.status(200).send("Login effettuato")
+    sendAccessToken( req, res, accessToken )
 
     } catch(error) {
         res.status(500).send(`Errore durante l'autenticazione: ${ error }`)
@@ -99,21 +98,77 @@ const loginUser = async (req, res) => {
 }
 
 const logoutUser = async ( req, res ) => {
-    res.clearCookie('refreshToken')
+    res.clearCookie('refreshToken', { path : '/refresh_token' })
     res.status(200).send("Logged out")
 }
 
 const protectedRoute = async ( req, res ) => {
     try {
-    const userId = isAuth(req)
+        //console.log(req.headers)
+        const userId = isAuth(req)
     if ( userId != null ) {
-        throw ("Utente non autorizzato")
-    }
         res.status(200).send("Utente autorizzato all'accesso")
+    }
     } catch(error) {
         res.status(500).send(`Errore nell'accesso alla risorsa: ${error}`)
     }
 }
 
-export { registerUser, loginUser, logoutUser, protectedRoute }
+const refreshToken = async (req, res) => {
+    console.log(`Cookies nella richiesta : ${req.cookies.refreshToken}`)
+    const refreshToken = req.cookies.refreshToken
+
+    if (!refreshToken) {
+        return res.send({accessToken : '' })
+    }
+    
+    let payload = null
+    try {
+        payload = verify(refreshToken,  process.env.REFRESH_TOKEN_SECRET)
+    } catch(error) {
+        return res.send({accessToken : `Non verificato: ${error}`})
+    }
+    console.log(payload.userId)
+    // cerco se è presente il record corrispondente all'userID dato dal token
+    const user = await prisma.app_users.findUnique({
+        where : {
+            id : payload.userId
+        }
+    })
+    console.log(user)
+    // se user non è presente ritorno un token vuoto
+    if(!user) {
+        return (res.send({accessToken : ''}))
+    }
+    // se il token non corrisponde ritorno un token vuoto
+    if (user.refresh_token != refreshToken) {
+        return (res.send({accessToken : ''}))
+    }
+    //se ho trovato l'utente e il refresh_token corrisponde a quello nel DB, genero e invio una nuova coppia
+    const newAccessToken = generateAccessToken(user.id)
+    const newRefreshToken = generateRefreshToken(user.id)
+
+    // inserimento del nuovo refresh token nel DB
+
+    await prisma.app_users.update({
+        data : {
+            refresh_token : newRefreshToken
+        },
+        where : {
+            id : user.id
+        }
+    })
+
+    // invio nuovi token di accesso e refresh nella risposta
+    sendRefreshToken(req, res, newRefreshToken)
+    sendAccessToken(req, res,newAccessToken)
+}
+
+export {
+    registerUser, 
+    loginUser, 
+    logoutUser,
+    protectedRoute,
+    refreshToken,
+}
 
