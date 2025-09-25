@@ -13,53 +13,61 @@ const {verify} = jwt.default
 const prisma = new PrismaClient() 
 
 const registerUser = async (req, res) => {
-    const mail = req.body.mail
-    const name = req.body.name
-    const surname = req.body.surname
-    const password = req.body.password
-    const role = req.body.role
 
-    if ( !mail || !name || !surname || !password ) { 
-        throw ("Mancano dati")
-    }
-
-    // constrollo se l'utente è già presente nel DB
-    const alreadyRegistered = await prisma.app_users.findFirst({
-        where : {
-            mail : mail
-        }
-    })
-    // se già presenete nel DB lancio un errore
-    if ( alreadyRegistered ) {
-        throw ("Utente già registrato")
-    }
+    try {
+        const mail = req.body.mail
+        const name = req.body.name
+        const surname = req.body.surname
+        const password = req.body.password
+        const role = req.body.role
     
-    // se non presente nel DB codifico la password e aggiungo l'utente
-    const hashedPassword = await hash( password, 10)
-    const currentDate = new Date().toJSON()
-    const insertUser = await prisma.app_users.create({
-        data : {
-            mail: mail,
-            name : name,
-            surname : surname,
-            password : hashedPassword,
-            role : role,
-            date_create : currentDate
+        if ( !mail || !name || !surname || !password ) { 
+            throw new Error("Mancano dati")
         }
-    })
-
-    res.status(200).send(insertUser)
+    
+        // constrollo se l'utente è già presente nel DB
+        const alreadyRegistered = await prisma.app_users.findFirst({
+            where : {
+                mail : mail
+            }
+        })
+        // se già presenete nel DB lancio un errore
+        if ( alreadyRegistered ) {
+            throw new Error("Utente già registrato")
+        }
+        
+        // se non presente nel DB codifico la password e aggiungo l'utente
+        const hashedPassword = await hash( password, 10)
+        const currentDate = new Date().toJSON()
+        const insertUser = await prisma.app_users.create({
+            data : {
+                mail: mail,
+                name : name,
+                surname : surname,
+                password : hashedPassword,
+                role : role,
+                date_create : currentDate
+            }
+        })
+    
+        res.status(200).send(insertUser)
+    } catch(error) {
+        res.status(500).send({
+            error: error.message
+        })
+    }
 }
 
 const loginUser = async (req, res) => {
 
     try {
     // nel body viene passata mail e password
+    console.log("arrivata una richiesta login")
     const mail = req.body.mail
     const password = req.body.password
 
     if ( !mail || !password ) {
-        throw ("Mail o password mancanti")
+        throw new Error("Mail o password mancanti")
     }
     const user = await prisma.app_users.findFirst({
         where : {
@@ -67,14 +75,13 @@ const loginUser = async (req, res) => {
         }
     })
     if ( !user ) {
-        throw ("Utente non registrato")
+        throw new Error("Utente non registrato")
     }
 
     const userVerificated = await compare( password, user.password )
     if ( !userVerificated ) {
-        throw("Password errata")
+        throw new Error("Password errata")
     }
-
     // creazione ed invio jwtoken (JSON Web token)
     const accessToken = generateAccessToken( user.id )
     const refreshToken = generateRefreshToken( user.id )
@@ -89,15 +96,18 @@ const loginUser = async (req, res) => {
     } )
 
     // invio del token di autenticazione e di refresh
-    sendRefreshToken( req, res, refreshToken)
-    sendAccessToken( req, res, accessToken )
+    sendRefreshToken( req, res, refreshToken )
+    sendAccessToken( req, res, accessToken, user )
 
     } catch(error) {
-        res.status(500).send(`Errore durante l'autenticazione: ${ error }`)
+        res.status(500).send({
+            error : `${error.message}`
+        })
     }
 }
 
 const logoutUser = async ( req, res ) => {
+    console.log("arrivato al logout")
     res.clearCookie('refreshToken', { path : '/refresh_token' })
     res.status(200).send("Logged out")
 }
@@ -161,7 +171,7 @@ const refreshToken = async (req, res) => {
 
     // invio nuovi token di accesso e refresh nella risposta
     sendRefreshToken(req, res, newRefreshToken)
-    sendAccessToken(req, res,newAccessToken)
+    sendAccessToken(req, res,newAccessToken, user)
 }
 
 export {

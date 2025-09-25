@@ -12,6 +12,20 @@ const insertExpense = async (req, res) => {
   const currentDate = new Date().toJSON()
   console.log(`Inserimento nuova spesa: ${newExpense}`)
 
+  console.log(
+   {
+      data: {
+        userid : newExpense.userid,
+        category_id : newExpense.category_id,
+        date_create : currentDate,
+        date_update : currentDate,
+        amount: newExpense.amount,
+        note : newExpense.note,
+        date: new Date(newExpense.date).toJSON(),
+        }
+    } 
+  )
+
   try{
 
     const expense = await prisma.expense.create({
@@ -21,7 +35,8 @@ const insertExpense = async (req, res) => {
         date_create : currentDate,
         date_update : currentDate,
         amount: newExpense.amount,
-        note : newExpense.note
+        note : newExpense.note,
+        date: new Date(newExpense.date).toJSON(),
         }
     })
 
@@ -41,6 +56,40 @@ const readExpense = async (req, res) => {
   }  
 }
 
+// funzione per la lettura delle spese di un utente
+const readUserExpense = async (req, res) => {
+  try{
+    console.log(req.params.id)
+    const expense = await prisma.expense.findMany({
+      where: {
+        userid: {
+          equals: Number(req.params.id)
+        }
+      },
+      include: {
+        category: {
+          select: {
+            category: true
+          }
+        }
+      }
+    })
+    res.status(200).send(expense)
+  } catch(error) {
+    res.status(500).send(`Errore nella lettura spese : ${error}`)
+  }  
+}
+
+// funzione per la lettura delle categorie
+const readCategory = async (req, res) => {
+  try{
+    const category = await prisma.category.findMany()
+    res.status(200).send(category)
+  } catch(error) {
+    res.status(500).send(`Errore nella lettura spese : ${error}`)
+  }  
+}
+
 // funzione per l'update di una spesa
 const updateExpense = async (req, res) => {
   const currentExpense = req.body
@@ -54,7 +103,8 @@ const updateExpense = async (req, res) => {
         category_id : currentExpense.category_id,
         date_update : currentDate,
         amount : currentExpense.amount,
-        note : currentExpense.note
+        note : currentExpense.note,
+        date: new Date(currentExpense.date).toJSON()
       }
     })
     res.status(200).send(expense)
@@ -90,4 +140,11 @@ const deleteExpenseAll = async (req, res) => {
 }
 
 // export delle funzioni per CRUD API
-export { insertExpense, readExpense, updateExpense, deleteExpense, deleteExpenseAll }
+export { 
+  insertExpense, 
+  readExpense, 
+  readUserExpense,
+  readCategory, 
+  updateExpense, 
+  deleteExpense, 
+  deleteExpenseAll }

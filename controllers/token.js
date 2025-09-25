@@ -12,18 +12,22 @@ const generateRefreshToken = ( userId ) => {
     return sign( { userId }, process.env.REFRESH_TOKEN_SECRET, { expiresIn : '7d' }  )
 }
 
-const sendAccessToken = (req, res, accessToken) => {
+const sendAccessToken = (req, res, accessToken, user) => {
+    const { id, name, surname } = user
     res.send({ 
         accessToken,
-        mail : req.body?.mail
+        mail : user.mail,
+        id,
+        name,
+        surname
      })
-}
-
-const sendRefreshToken = (req, res, refreshToken) => {
-    res.cookie('refreshToken', refreshToken, {
-        httpOnly : true,
-        path : '/refresh_token'
-    })
+    }
+    
+    const sendRefreshToken = (req, res, refreshToken) => {
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly : true,
+            path : '/refresh_token'
+        })
 }
 
 export { 
