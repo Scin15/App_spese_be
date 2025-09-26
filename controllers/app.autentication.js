@@ -1,6 +1,7 @@
 import 'dotenv/config' 
 import { hash, compare } from 'bcryptjs' // libreria per la codifica hash delle password
 import { PrismaClient } from '../generated/prisma/index.js'
+import { withAccelerate } from '@prisma/extension-accelerate'
 import {
     generateAccessToken,
     generateRefreshToken,
@@ -10,7 +11,7 @@ import {
 import { isAuth } from './isAuth.js'
 import * as jwt from 'jsonwebtoken'
 const {verify} = jwt.default
-const prisma = new PrismaClient() 
+const prisma = new PrismaClient().$extends(withAccelerate())
 
 const registerUser = async (req, res) => {
 

@@ -1,4 +1,5 @@
 import { PrismaClient } from './generated/prisma/index.js'
+import { withAccelerate } from '@prisma/extension-accelerate'
 import express from 'express'
 import { 
   insertExpense, 
@@ -27,7 +28,7 @@ app.use(cors({
   credentials : true
 }))
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient().$extends(withAccelerate())
 
 // registrazione utente
 app.post('/register', registerUser)
