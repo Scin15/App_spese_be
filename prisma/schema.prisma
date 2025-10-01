@@ -12,8 +12,8 @@ model app_users {
   id             Int       @id @default(autoincrement())
   name           String?   @db.VarChar(255)
   surname        String?   @db.VarChar(255)
-  mail           String?   @unique(map: "mail_unica") @db.VarChar(255)
-  password       String?   @db.VarChar(255)
+  mail           String    @unique(map: "mail_unica") @db.VarChar(255)
+  password       String    @db.VarChar(255)
   role           String?   @db.VarChar(1)
   date_create    DateTime? @db.Date
   date_eliminate DateTime? @db.Date
@@ -30,7 +30,7 @@ model category {
 
 model expense {
   id          Int        @id @default(autoincrement())
-  userid      Int?
+  userid      Int
   date_create DateTime?  @db.Date
   date_update DateTime?  @db.Date
   category_id Int?
