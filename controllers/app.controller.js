@@ -140,6 +140,44 @@ const deleteExpenseAll = async (req, res) => {
   }
 }
 
+const readUserStats = async (req, res) => {
+  try{
+    // cerco il totale delle spes per l'utente
+    const { _sum } = await prisma.expense.aggregate({
+      _sum : {
+        amount: true
+      },
+      where: {
+        userid: {
+          equals: Number(req.params.id)
+        }
+      }
+    })
+
+    // cerco la categoria in cui l'utente ha speso di più
+    const maxCategory = await prisma.expense.groupBy({
+      by: ["category_id"],
+      where: {
+        userid: {
+          equals: Number(req.params.id)
+        }
+      },
+      _sum : {
+        amount: true
+      },
+    })
+
+    maxCategory.sort((a ,b) => b._sum.amount - a._sum.amount)
+
+    //cerco il budget dell'utente e calcolo la differenza rispetto a quello che ha speso in totale
+
+    res.status(200).send({_sum, maxCategory: maxCategory[0]})
+
+  } catch(error) {
+    res.status(500).send(`Errore nella lettura delle statistiche utente: ${error}`)
+  }
+}
+
 // export delle funzioni per CRUD API
 export { 
   insertExpense, 
@@ -148,4 +186,6 @@ export {
   readCategory, 
   updateExpense, 
   deleteExpense, 
-  deleteExpenseAll }
+  deleteExpenseAll,
+  readUserStats
+}

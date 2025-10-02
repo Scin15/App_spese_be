@@ -19,6 +19,7 @@ model app_users {
   date_eliminate DateTime? @db.Date
   refresh_token  String?   @db.VarChar(255)
   expense        expense[]
+  user_settings  user_settings[]
 }
 
 model category {
@@ -38,5 +39,13 @@ model expense {
   note        String?    @db.VarChar(1000)
   date        DateTime?  @db.Date
   category    category?  @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  app_users   app_users? @relation(fields: [userid], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model user_settings {
+  id          Int        @id @default(autoincrement())
+  userid      Int
+  date_update DateTime?  @db.Date
+  budget      Decimal?   @db.Decimal
   app_users   app_users? @relation(fields: [userid], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
