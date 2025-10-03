@@ -1,5 +1,3 @@
-
-
 import bcrypt from 'bcryptjs' // libreria per hash della password
 import cookieParser from 'cookie-parser' // libreria per la getione dei cookie
 import { PrismaClient } from '../generated/prisma/index.js'
@@ -73,7 +71,7 @@ const readUserExpense = async (req, res) => {
             category: true
           }
         }
-      }
+      },
     })
     res.status(200).send(expense)
   } catch(error) {
@@ -140,7 +138,7 @@ const deleteExpenseAll = async (req, res) => {
   }
 }
 
-const readUserStats = async (req, res) => {
+const readUserKpi = async (req, res) => {
   try{
     // cerco il totale delle spes per l'utente
     const { _sum } = await prisma.expense.aggregate({
@@ -169,10 +167,80 @@ const readUserStats = async (req, res) => {
 
     maxCategory.sort((a ,b) => b._sum.amount - a._sum.amount)
 
-    //cerco il budget dell'utente e calcolo la differenza rispetto a quello che ha speso in totale
+    // cerco il nome della categoria con l'id trovato
 
-    res.status(200).send({_sum, maxCategory: maxCategory[0]})
+    const maxCategoryDesc = await prisma.category.findFirst({
+      where: {
+        id: {
+          equals: maxCategory[0].category_id
+        }
+      },
+      select: {
+        category: true
+      }
+    })
 
+    //cerco il budget dell'utente
+
+    const budget = await prisma.user_settings.findFirst({
+      where: {
+        userid: {
+          equals: Number(req.params.id)
+        }
+      },
+      select: {
+        budget: true
+      }
+    })
+
+    res.status(200).send({
+      total: _sum.amount, 
+      maxCategory: {
+        id: maxCategory[0].category_id, 
+        desc: maxCategoryDesc.category, 
+        amount: maxCategory[0]._sum.amount 
+      },
+      budget: budget.budget 
+    })
+
+  } catch(error) {
+    res.status(500).send(`Errore nella lettura dei Kpi utente: ${error}`)
+  }
+}
+
+const readUserStats = async (req, res) => {
+  try{
+
+    // leggo l'ammontare per categoria usando una query sql perchè Prisma non implementa l'inclusione dei campi con relazione (category nella taballa category) quando uso il metodo prisma.table.groupBy
+    const categoryAmount = await prisma.$queryRaw`
+    SELECT a.category_id,
+      b.category,
+      SUM(a.amount) as amount
+    FROM 
+      expense a
+    INNER JOIN 
+      category b 
+    ON 
+      a.category_id = b.id
+    WHERE 
+      a.userid = ${Number(req.params.id)}
+    GROUP BY 
+      a.category_id,
+      b.category
+    `
+
+    // leggo l'ammontare per mese
+    const monthlyAmount = await prisma.$queryRaw`
+      SELECT to_char(date, 'YYYY-MM') as yearMonth,
+        SUM(amount) as amount
+      FROM expense
+      WHERE 
+        userid = ${Number(req.params.id)}
+      GROUP BY
+        yearMonth`
+
+  res.status(200).send({categoryAmount, monthlyAmount})
+    
   } catch(error) {
     res.status(500).send(`Errore nella lettura delle statistiche utente: ${error}`)
   }
@@ -187,5 +255,6 @@ export {
   updateExpense, 
   deleteExpense, 
   deleteExpenseAll,
+  readUserKpi,
   readUserStats
 }

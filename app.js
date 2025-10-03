@@ -9,6 +9,7 @@ import {
   updateExpense, 
   deleteExpense, 
   deleteExpenseAll,
+  readUserKpi,
   readUserStats } from './controllers/app.controller.js'
 import { 
   registerUser, 
@@ -45,6 +46,7 @@ app.post('/refresh_token', refreshToken)
 // CRUD
 app.get('/expenses', readExpense)
 app.get('/expenses/:id', readUserExpense)
+app.get('/expenses/kpi/:id', readUserKpi)
 app.get('/expenses/stats/:id', readUserStats)
 app.get('/category', readCategory)
 app.post('/expenses', insertExpense)
