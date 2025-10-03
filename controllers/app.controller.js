@@ -172,7 +172,7 @@ const readUserKpi = async (req, res) => {
     const maxCategoryDesc = await prisma.category.findFirst({
       where: {
         id: {
-          equals: maxCategory[0].category_id
+          equals: maxCategory.length > 0 ? maxCategory[0].category_id : -1
         }
       },
       select: {
@@ -194,11 +194,11 @@ const readUserKpi = async (req, res) => {
     })
 
     res.status(200).send({
-      total: _sum.amount, 
+      total: _sum.amount ? _sum.amount : 0, 
       maxCategory: {
-        id: maxCategory[0].category_id, 
-        desc: maxCategoryDesc.category, 
-        amount: maxCategory[0]._sum.amount 
+        id: maxCategory.length > 0 ? maxCategory[0].category_id : -1, 
+        desc: maxCategoryDesc ? maxCategoryDesc.category : "", 
+        amount: maxCategory.length > 0 ? maxCategory[0]._sum.amount : 0 
       },
       budget: budget.budget 
     })

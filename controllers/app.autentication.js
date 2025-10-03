@@ -25,7 +25,11 @@ const registerUser = async (req, res) => {
         if ( !mail || !name || !surname || !password ) { 
             throw new Error("Mancano dati")
         }
-    
+        
+        if ( !mail.match(/^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/) ) { 
+            throw new Error("Email non valida")
+        }
+
         // constrollo se l'utente è già presente nel DB
         const alreadyRegistered = await prisma.app_users.findFirst({
             where : {
@@ -51,11 +55,21 @@ const registerUser = async (req, res) => {
             }
         })
     
+        // inserisco record per i settings dell'utente con valori default
+        await prisma.user_settings.create({
+            data: {
+                userid: insertUser.id,
+                date_update: currentDate,
+                budget: 1000
+            }
+        })
+
         res.status(200).send(insertUser)
     } catch(error) {
         res.status(500).send({
-            error: error.message
-        })
+            error : `${error.message}`
+        }
+        )
     }
 }
 
