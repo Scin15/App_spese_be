@@ -140,7 +140,7 @@ const protectedRoute = async ( req, res ) => {
 }
 
 const refreshToken = async (req, res) => {
-    console.log(`Cookies nella richiesta : ${req.cookies.refreshToken}`)
+    console.log(`Cookies nella richiesta : `, req.headers)
     const refreshToken = req.cookies.refreshToken
 
     if (!refreshToken) {
