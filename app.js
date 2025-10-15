@@ -20,6 +20,7 @@ import {
 import 'dotenv/config' // libreria dotenv per usare le variabili di ambiente con process.env.<variabile>
 import cookieParser from 'cookie-parser' // libreria per la gestione di cookie
 import cors from 'cors' // libreria per la gestione del Cross-origin resource sharing: https://en.wikipedia.org/wiki/Cross-origin_resource_sharing
+import { isAuth } from './controllers/isAuth.js'
 
 const app = express()
 
@@ -43,11 +44,14 @@ app.get('/protected', protectedRoute)
 // refresh del token di accesso
 app.post('/refresh_token', refreshToken)
 
+// middleware per la verifica del JWT accessToken. Se è verificato aggiunge alla richiesta una proprietà userAuth valorizzato con user id
+app.use(protectedRoute)
+
 // CRUD
-app.get('/expenses', readExpense)
-app.get('/expenses/:id', readUserExpense)
-app.get('/expenses/kpi/:id', readUserKpi)
-app.get('/expenses/stats/:id', readUserStats)
+app.get('/allExpenses', readExpense)
+app.get('/expenses', readUserExpense)
+app.get('/expenses/kpi/', readUserKpi)
+app.get('/expenses/stats/', readUserStats)
 app.get('/category', readCategory)
 app.post('/expenses', insertExpense)
 app.put('/expenses', updateExpense)

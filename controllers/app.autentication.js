@@ -128,13 +128,18 @@ const logoutUser = async ( req, res ) => {
 }
 
 // diventa il middleware per ogni richiesta protetta (ogni richiesa di CRUD relativa all'utente)
-const protectedRoute = async ( req, res ) => {
+const protectedRoute = async ( req, res, next ) => {
     try {
         //console.log(req.headers)
-        const userId = isAuth(req)
-    if ( userId != null ) {
-        res.status(200).send("Utente autorizzato all'accesso")
+        const userId = isAuth(req) // ritorna l'userId
+    if ( !userId ) {
+      throw new Error("You need to login")
     }
+    
+    console.log("Utente auth:", userId)
+    req.userAuth = userId
+    next()
+
     } catch(error) {
         res.status(500).send(`Errore nell'accesso alla risorsa: ${error}`)
     }

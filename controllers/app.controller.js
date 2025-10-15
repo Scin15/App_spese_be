@@ -14,7 +14,7 @@ const insertExpense = async (req, res) => {
   console.log(
    {
       data: {
-        userid : newExpense.userid,
+        userid : req.userAuth,
         category_id : newExpense.category_id,
         date_create : currentDate,
         date_update : currentDate,
@@ -59,10 +59,11 @@ const readExpense = async (req, res) => {
 const readUserExpense = async (req, res) => {
   try{
     console.log(req.params.id)
+    console.log("User nella richiesta arrivata dal middleware:", req.userAuth)
     const expense = await prisma.expense.findMany({
       where: {
         userid: {
-          equals: Number(req.params.id)
+          equals: req.userAuth
         }
       },
       include: {
@@ -96,7 +97,8 @@ const updateExpense = async (req, res) => {
   try{
     const expense = await prisma.expense.update({
       where : {
-        id : currentExpense.id
+        id : currentExpense.id,
+        userid: req.userAuth
       },
       data : {
         category_id : currentExpense.category_id,
@@ -119,7 +121,8 @@ const deleteExpense = async (req, res) => {
   try{
     const expense = await prisma.expense.delete({
       where : {
-        id : currentExpense.id
+        id : currentExpense.id,
+        userid: req.userAuth
       }
     })
     res.status(200).send(expense)
@@ -140,6 +143,7 @@ const deleteExpenseAll = async (req, res) => {
 
 const readUserKpi = async (req, res) => {
   try{
+    console.log("Utente per la lettura dei kpi: ", req.userAuth)
     // cerco il totale delle spes per l'utente
     const { _sum } = await prisma.expense.aggregate({
       _sum : {
@@ -147,7 +151,7 @@ const readUserKpi = async (req, res) => {
       },
       where: {
         userid: {
-          equals: Number(req.params.id)
+          equals: req.userAuth
         }
       }
     })
@@ -157,7 +161,7 @@ const readUserKpi = async (req, res) => {
       by: ["category_id"],
       where: {
         userid: {
-          equals: Number(req.params.id)
+          equals: req.userAuth
         }
       },
       _sum : {
@@ -185,7 +189,7 @@ const readUserKpi = async (req, res) => {
     const budget = await prisma.user_settings.findFirst({
       where: {
         userid: {
-          equals: Number(req.params.id)
+          equals: req.userAuth
         }
       },
       select: {
@@ -223,7 +227,7 @@ const readUserStats = async (req, res) => {
     ON 
       a.category_id = b.id
     WHERE 
-      a.userid = ${Number(req.params.id)}
+      a.userid = ${req.userAuth}
     GROUP BY 
       a.category_id,
       b.category
@@ -235,7 +239,7 @@ const readUserStats = async (req, res) => {
         SUM(amount) as amount
       FROM expense
       WHERE 
-        userid = ${Number(req.params.id)}
+        userid = ${req.userAuth}
       GROUP BY
         yearMonth`
 
