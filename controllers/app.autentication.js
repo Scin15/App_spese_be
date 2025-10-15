@@ -127,6 +127,7 @@ const logoutUser = async ( req, res ) => {
     res.status(200).send("Logged out")
 }
 
+// diventa il middleware per ogni richiesta protetta (ogni richiesa di CRUD relativa all'utente)
 const protectedRoute = async ( req, res ) => {
     try {
         //console.log(req.headers)
