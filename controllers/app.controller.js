@@ -115,6 +115,29 @@ const updateExpense = async (req, res) => {
   }
 }
 
+// funzione per l'update del budget utente
+const updateBudget = async (req, res) => {
+  const currentDate = new Date().toJSON()
+  const budget = (new Number(req.body.budget)).valueOf()
+  try{
+    const userSettings = await prisma.user_settings.updateMany({
+      where : {
+        userid: {
+          equals: req.userAuth
+        }
+      },
+      data : {
+        date_update : currentDate,
+        budget : budget,
+      }
+    })
+    res.status(200).send(userSettings)
+  } catch(error)
+  {
+    res.status(500).send(`Errore nell'update dell budget: ${error}`)
+  }
+}
+
 // funzione per l'eliminazione di una spesa
 const deleteExpense = async (req, res) => {
   const currentExpense = req.body
@@ -256,7 +279,8 @@ export {
   readExpense, 
   readUserExpense,
   readCategory, 
-  updateExpense, 
+  updateExpense,
+  updateBudget, 
   deleteExpense, 
   deleteExpenseAll,
   readUserKpi,
