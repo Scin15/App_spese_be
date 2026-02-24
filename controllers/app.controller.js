@@ -90,12 +90,28 @@ const readCategory = async (req, res) => {
   }  
 }
 
-// funzione per l'update di una spesa
+// funzione per l'update di una o più spese
 const updateExpense = async (req, res) => {
-  const currentExpense = req.body
-  const currentDate = new Date().toJSON()
+  const currentExpense = req.body;
+  const currentDate = new Date().toJSON();
+  let expense;
   try{
-    const expense = await prisma.expense.update({
+  if (Array.isArray(currentExpense.id)) {
+    expense = await prisma.expense.updateMany({
+      where : {
+        id : { in: currentExpense.id },
+        userid: req.userAuth
+      },
+      data : {
+        category_id : currentExpense.category_id,
+        date_update : currentDate,
+        amount : currentExpense.amount,
+        note : currentExpense.note,
+        date: new Date(currentExpense.date).toJSON()
+      }
+    })
+  } else {
+    expense = await prisma.expense.update({
       where : {
         id : currentExpense.id,
         userid: req.userAuth
@@ -108,6 +124,7 @@ const updateExpense = async (req, res) => {
         date: new Date(currentExpense.date).toJSON()
       }
     })
+  }
     res.status(200).send(expense)
   } catch(error)
   {
@@ -115,23 +132,38 @@ const updateExpense = async (req, res) => {
   }
 }
 
-// funzione per l'eliminazione di una spesa
+// funzione per l'eliminazione di una o più spese
 const deleteExpense = async (req, res) => {
-  const currentExpense = req.body
+  const currentExpense = req.body;
+  let expense;
   try{
-    const expense = await prisma.expense.delete({
+  if (Array.isArray(currentExpense.id)) {
+    expense = await prisma.expense.deleteMany({
+      where: {
+        id: {
+          in: currentExpense.id
+        },
+        userid: {
+          equals: req.userAuth
+        }
+      }
+    })
+  }
+  else {
+    expense = await prisma.expense.delete({
       where : {
         id : currentExpense.id,
         userid: req.userAuth
       }
     })
+  }
     res.status(200).send(expense)
   } catch(error){
     res.status(500).send(`Errore nell'eliminazione della spesa : ${error}`)
   }
 }
 
-// funzione per l'eliminazione di una spesa
+// funzione per l'eliminazione di tutte le spese
 const deleteExpenseAll = async (req, res) => {
   try{
     const expense = await prisma.expense.deleteMany()
@@ -216,6 +248,8 @@ const readUserStats = async (req, res) => {
   try{
 
     // leggo l'ammontare per categoria usando una query sql perchè Prisma non implementa l'inclusione dei campi con relazione (category nella taballa category) quando uso il metodo prisma.table.groupBy
+
+    // capire se devo stare attento a possibile query injections
     const categoryAmount = await prisma.$queryRaw`
     SELECT a.category_id,
       b.category,
