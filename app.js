@@ -6,7 +6,8 @@ import {
   readExpense, 
   readUserExpense, 
   readCategory, 
-  updateExpense, 
+  updateExpense,
+  updateBudget, 
   deleteExpense, 
   deleteExpenseAll,
   readUserKpi,
@@ -57,6 +58,7 @@ app.post('/expenses', insertExpense)
 app.put('/expenses', updateExpense)
 app.delete('/expenses', deleteExpense)
 app.delete('/expenses/all', deleteExpenseAll)
+app.put('/budget', updateBudget)
 
 // avvio server
 app.listen(process.env.PORT, () => {
