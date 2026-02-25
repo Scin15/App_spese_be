@@ -2,7 +2,16 @@ import bcrypt from 'bcryptjs' // libreria per hash della password
 import cookieParser from 'cookie-parser' // libreria per la getione dei cookie
 import { PrismaClient } from '../generated/prisma/index.js'
 import { withAccelerate } from '@prisma/extension-accelerate'
-const prisma = new PrismaClient().$extends(withAccelerate())
+import { PrismaPostgresAdapter } from "@prisma/adapter-ppg";
+import { PrismaPg } from "@prisma/adapter-pg";
+// const prisma = new PrismaClient({}).$extends(withAccelerate())
+
+const connectionString = process.env.DATABASE_URL;
+const prisma = new PrismaClient({
+  adapter: new PrismaPg({
+    connectionString
+  })
+})
 const saltRounds = 10
 
 // funzione per la creazione nuovo record

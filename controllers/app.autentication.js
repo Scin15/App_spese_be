@@ -1,7 +1,9 @@
 import 'dotenv/config' 
 import { hash, compare } from 'bcryptjs' // libreria per la codifica hash delle password
-import { PrismaClient } from '../generated/prisma/index.js'
+import { PrismaClient } from '../generated/prisma/client.js'
 import { withAccelerate } from '@prisma/extension-accelerate'
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaPostgresAdapter } from '@prisma/adapter-ppg'
 import {
     generateAccessToken,
     generateRefreshToken,
@@ -11,7 +13,25 @@ import {
 import { isAuth } from './isAuth.js'
 import * as jwt from 'jsonwebtoken'
 const {verify} = jwt.default
-const prisma = new PrismaClient().$extends(withAccelerate())
+// const prisma = new PrismaClient().$extends(withAccelerate())
+
+const connectionString = process.env.DATABASE_URL;
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL
+})
+
+const prisma = new PrismaClient({
+    accelerateUrl: process.env.DATABASE_URL
+}).$extends(withAccelerate());
+
+let user = null 
+
+await prisma.user_settings.findFirst({
+})
+.then(e=>user=e)
+.catch(e=> console.log(e))
+
+console.log("Utente trovato:", user);
 
 const registerUser = async (req, res) => {
 
@@ -115,6 +135,7 @@ const loginUser = async (req, res) => {
     sendAccessToken( req, res, accessToken, user )
 
     } catch(error) {
+        console.log(error);
         res.status(500).send({
             error : `${error.message}`
         })
