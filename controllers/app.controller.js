@@ -1,8 +1,4 @@
-import bcrypt from 'bcryptjs' // libreria per hash della password
-import cookieParser from 'cookie-parser' // libreria per la getione dei cookie
 import prisma from '../prisma-client/prismaClient.js';
-
-const saltRounds = 10
 
 // funzione per la creazione nuovo record
 const insertExpense = async (req, res) => {

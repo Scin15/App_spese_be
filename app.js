@@ -16,7 +16,7 @@ import {
   logoutUser, 
   protectedRoute, 
   refreshToken } from './controllers/app.autentication.js'
-import 'dotenv/config' // libreria dotenv per usare le variabili di ambiente con process.env.<variabile>
+// import 'dotenv/config' // libreria dotenv per usare le variabili di ambiente con process.env.<variabile>
 import cookieParser from 'cookie-parser' // libreria per la gestione di cookie
 import cors from 'cors' // libreria per la gestione del Cross-origin resource sharing: https://en.wikipedia.org/wiki/Cross-origin_resource_sharing
 import { isAuth } from './controllers/isAuth.js'

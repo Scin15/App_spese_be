@@ -1,4 +1,3 @@
-import 'dotenv/config' 
 import { hash, compare } from 'bcryptjs' // libreria per la codifica hash delle password
 import {
     generateAccessToken,
