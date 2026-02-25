@@ -1,6 +1,3 @@
-import { PrismaClient } from './generated/prisma/index.js'
-import { withAccelerate } from '@prisma/extension-accelerate'
-import { PrismaPg } from "@prisma/adapter-pg";
 import express from 'express'
 import { 
   insertExpense, 
@@ -33,14 +30,7 @@ app.use(cors({
   credentials : true
 }))
 
-// const prisma = new PrismaClient({}).$extends(withAccelerate())
-// creare un modulo che esporta un' istanza di PrismaClient per non dover crearne multiple per più moduli.
-const connectionString = process.env.DATABASE_URL;
-const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL
-})
 
-const prisma = new PrismaClient({adapter});
 
 // registrazione utente
 app.post('/register', registerUser)
