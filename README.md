@@ -1,2 +1,3 @@
-# App_spese
-Web app to track personal expenses
+# App-spese-be
+
+Server Express.js per supporto applicazione App-spese;
