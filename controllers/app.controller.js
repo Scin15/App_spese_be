@@ -280,7 +280,7 @@ const readUserStats = async (req, res) => {
     // capire se devo stare attento a possibile query injections
 
     // ricavo i dati aggregando anche su mese e anno
-    const categoryAmount = await prisma.$queryRaw`
+    const categoryMonthAmount = await prisma.$queryRaw`
     SELECT a.category_id,
       b.category,
       to_char(a.date, 'YYYY-MM') as yearMonth,
@@ -295,20 +295,21 @@ const readUserStats = async (req, res) => {
       a.userid = ${req.userAuth}
     GROUP BY 
       a.category_id,
-      b.category
+      b.category,
+      yearMonth
     `;
 
-    // leggo l'ammontare per mese e categoria
-    const monthlyAmount = await prisma.$queryRaw`
-      SELECT to_char(date, 'YYYY-MM') as yearMonth,
-        SUM(amount) as amount
-      FROM expense
-      WHERE 
-        userid = ${req.userAuth}
-      GROUP BY
-        yearMonth`;
+    // // leggo l'ammontare per mese e categoria
+    // const monthlyAmount = await prisma.$queryRaw`
+    //   SELECT to_char(date, 'YYYY-MM') as yearMonth,
+    //     SUM(amount) as amount
+    //   FROM expense
+    //   WHERE 
+    //     userid = ${req.userAuth}
+    //   GROUP BY
+    //     yearMonth`;
 
-    res.status(200).send({ categoryAmount, monthlyAmount });
+    res.status(200).send({ categoryMonthAmount });
   } catch (error) {
     res
       .status(500)
