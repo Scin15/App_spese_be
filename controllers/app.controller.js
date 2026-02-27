@@ -283,6 +283,7 @@ const readUserStats = async (req, res) => {
     const categoryAmount = await prisma.$queryRaw`
     SELECT a.category_id,
       b.category,
+      to_char(a.date, 'YYYY-MM') as yearMonth,
       SUM(a.amount) as amount
     FROM 
       expense a
