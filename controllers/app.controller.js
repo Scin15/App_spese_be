@@ -15,8 +15,12 @@ const insertExpense = async (req, res) => {
       amount: newExpense.amount,
       note: newExpense.note,
       date: new Date(newExpense.date).toJSON(),
+      file: newExpense.file,
     },
   });
+
+  // arriva un oggetto vuoto
+  console.log(newExpense.file);
 
   try {
     const expense = await prisma.expense.create({
